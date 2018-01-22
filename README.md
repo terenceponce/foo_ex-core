@@ -1,24 +1,18 @@
-# README
+# Foo Ex
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Overview
 
-Things you may want to cover:
+- This is an attempt at creating a cryptocurrency exchange
 
-* Ruby version
+## Quick Start
 
-* System dependencies
+```
+git clone https://github.com/terenceponce/foo_ex-core # or clone your fork
+cd foo_ex-core
+bundle install
+cp .env.example .env
+bundle exec rake db:create db:migrate db:seed
+bundle exec rails server
+```
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Open a REST client and go to [localhost:3000](http://localhost:3000)
