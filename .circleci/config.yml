@@ -30,6 +30,9 @@ jobs:
       - run:
           name: Bundle Install
           command: bundle check || bundle install
+      - run:
+          name: Install RSpec JUnit Formatter
+          command: gem install rspec_junit_formatter
       - save_cache:
           key: v2-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
