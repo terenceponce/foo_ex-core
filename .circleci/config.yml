@@ -42,7 +42,7 @@ jobs:
           command: bin/rails db:schema:load --trace
       - type: shell
         command: |
-          COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN \
+          COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} \
           bundle exec rspec --format progress \
                 --format RspecJunitFormatter \
                 --out /tmp/test-results/rspec.xml \
