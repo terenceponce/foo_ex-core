@@ -5,38 +5,50 @@
 version: 2
 jobs:
   build:
-    docker:
-       - image: circleci/ruby:2.5.0
     working_directory: ~/foo_ex
+    docker:
+      - image: circleci/ruby:2.5-node
+        environment:
+          BUNDLE_PATH: vendor/bundle
+          PGHOST: 127.0.0.1
+          PGUSER: foo-ex-user
+          RAILS_ENV: test
+      - image: circleci/postgres:9.5-alpine
+        environment:
+          POSTGRES_USER: foo-ex-user
+          POSTGRES_DB: foo_ex_test
+          POSTGRES_PASSWORD: ""
     steps:
       - checkout
+      - run:
+          name: Which bundler?
+          command: bundle -v
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "Gemfile.lock" }}
-          - v1-dependencies-
+            - v2-dependencies{{ checksum "Gemfile.lock" }}
+            - v2-dependencies
       - run:
-          name: install dependencies
-          command: |
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+          name: Bundle Install
+          command: bundle check || bundle install
       - save_cache:
+          key: v2-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
-            - ./vendor/bundle
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-      - run: bundle exec rake db:create
-      - run: bundle exec rake db:schema:load
+            - vendor/bundle
       - run:
-          name: run tests
-          command: |
-            mkdir /tmp/test-results
-            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+          name: Wait for DB
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Database setup
+          command: bin/rails db:schema:load --trace
+      - type: shell
+        command: |
+          COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} \
+          bundle exec rspec --format progress \
+                --format RspecJunitFormatter \
+                --out /tmp/test-results/rspec.xml \
+                --format progress \
+                -- \
+                $TEST_FILES
 
-            bundle exec rspec --format progress \
-                            --format RspecJunitFormatter \
-                            --out /tmp/test-results/rspec.xml \
-                            --format progress \
-                            $TEST_FILES
       - store_test_results:
-          path: /tmp/test-results
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: test-results
+          path: test_results
